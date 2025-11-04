@@ -1,9 +1,9 @@
 #pragma once
 
 
-#define PRINTDEBUG
-#define verATP
-#define verAnalogInput
+// #define PRINTDEBUG
+// #define verATP
+// #define verAnalogInput
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -192,29 +192,30 @@ void sendNextion(void *pvParameters);
 void readNextion(void *pvParameters);
 void calculate_speedPump(void *pvParameters);
 void onHMIEvent(String messege, String data, String response);
+#ifdef PRINTDEBUG
 void printDebugLog(void *pvParameters);
+#endif
 
 hw_timer_t *My_timer = NULL;
 void IRAM_ATTR onTimer();
 
 RtcDS3231<TwoWire> Rtc(Wire);
-#ifdef verAnalogInput
-Adafruit_ADS1115 ads; /* Use this for the 16-bit version */
-LS_ANALOG_F *lls_analog_f;
-LS_ANALOG_U *lls_analog_u;
-#endif
+
 Preferences flash;
 EspSoftwareSerial::UART serialHMI;
 
 GyverPortal ui(&LittleFS);
-
-// void test();
 
 // ДУТ
 ILEVEL_SENSOR *lls;
 LS_RS485 *lls_RS485;
 LS_BLE *lls_Ble;
 LS_EMPTY *lls_Empty;
+#ifdef verAnalogInput
+Adafruit_ADS1115 ads; /* Use this for the 16-bit version */
+LS_ANALOG_F *lls_analog_f;
+LS_ANALOG_U *lls_analog_u;
+#endif
 
 #ifdef verATP
 // ДУТ в емкости АТП
@@ -238,5 +239,3 @@ TARRING *tar;
 
 // дисплей
 NEXTION hmi(serialHMI);
-
-

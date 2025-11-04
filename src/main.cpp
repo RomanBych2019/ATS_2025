@@ -12,16 +12,16 @@ void setup()
 {
     pinMode(GPIO_NUM_2, OUTPUT);
     pinMode(INDI_F_PIN_, OUTPUT);
-    digitalWrite(INDI_F_PIN_, HIGH); // индикация загрузки
     pinMode(INIDICATE_COUNT, OUTPUT);
-    digitalWrite(INIDICATE_COUNT, LOW);
+
+    // индикация начала загрузки
+    digitalWrite(INDI_F_PIN_, HIGH);
+    digitalWrite(INIDICATE_COUNT, HIGH);
+    digitalWrite(GPIO_NUM_2, HIGH);
 
     Serial.begin(115200);
     serialLS.begin(19200, SERIAL_8N1, RXLS, TXLS);
     serialHMI.begin(19200, SWSERIAL_8N1, RXDNEX, TXDNEX, false, 256);
-
-    printf("Ver: %s", VER);
-
     serialMB.begin(19200);
 
     hmi.echoEnabled(false);
@@ -79,6 +79,8 @@ void setup()
     if (!LittleFS.begin())
         Serial.println("FS Error");
 
+    log_e("Ver: %s", VER);
+
     ui.attachBuild(buildPage);
     ui.attach(actionDownload);
     ui.attach(actionPage);
@@ -133,21 +135,25 @@ void setup()
         NULL,               /* Идентификатор задачи, чтобы ее можно было отслеживать */
         1);
 
-    digitalWrite(INDI_F_PIN_, LOW);
     datemod.controlFlowrate = true;
+    datemod.mode = MENU;
+
+    // индикация окончания загрузки
+    digitalWrite(INDI_F_PIN_, LOW);
+    digitalWrite(INIDICATE_COUNT, LOW);
+    digitalWrite(GPIO_NUM_2, LOW);
 
     // таймер для светодиода индикации счетчика
     My_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(My_timer, &onTimer, true);
-    timerAlarmWrite(My_timer, 1000000, true);
-    timerAlarmEnable(My_timer);
+    timerAlarmWrite(My_timer, 1000000, false);
 }
 
 void loop()
 {
     errors();
-    hmi.listen();
     modbus();
+    hmi.listen();
     ui.tick();
 
     switch (datemod.mode)
@@ -629,8 +635,12 @@ void rpmFun()
     if (micros() - time_counter_imp > MIN_DURATION)
     {
         countV->setKcount();
-        if (countV->getK() % 20 == 0)
-            digitalWrite(INIDICATE_COUNT, !digitalRead(INIDICATE_COUNT));
+        if (countV->getK() % 20 == 0 && !timerAlarmEnabled(My_timer))
+        { 
+            // digitalWrite(INIDICATE_COUNT, !digitalRead(INIDICATE_COUNT));
+            digitalWrite(INIDICATE_COUNT, HIGH);
+            timerAlarmEnable(My_timer);
+        }
     }
     time_counter_imp = micros();
 }
@@ -683,7 +693,7 @@ void onHMIEvent(String messege, String data, String response)
     /*  ----------  Экран Меню  ---------- */
     if (messege == "menu")
     {
-        int k = flash.getInt("impulse_count", 2000); // чтение из eerom значения K счетчика
+        int k = flash.getInt("impulse_count", 1680); // чтение из eerom значения K счетчика
         countV->setKinLitr(k);
         datemod.error = 0;
         if (lls->getType() != ILEVEL_SENSOR::NO_LLS)
@@ -1252,7 +1262,7 @@ void wifiInit()
 
 void loginPortal()
 {
-    Serial.println("\nPortal start");
+    Serial.println("\nStart html Connect Wi-Fi");
     String res{};
     {
         WiFi.disconnect();
@@ -1277,7 +1287,7 @@ void loginPortal()
             return;
     }
     Serial.println();
-    Serial.println("Exit portal");
+    Serial.println("Close connect Wi-Fi");
 }
 void buildLoginPage()
 {
@@ -1316,8 +1326,8 @@ void buildLoginPage(String wifi)
 
 void action(GyverPortal &p)
 {
-    if (p.form("/login"))
-    {                             // кнопка нажата
+    if (p.form("/login")) // кнопка нажата
+    {
         p.copyStr("lg", lp.ssid); // копируем себе
         p.copyStr("ps", lp.pass);
         EEPROM.put(0, lp);       // сохраняем
