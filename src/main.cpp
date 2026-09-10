@@ -56,7 +56,7 @@ void setup()
     attachInterrupt(IN_KCOUNT, rpmFun, CHANGE); // функция прерывания
 
     modbus_configure(&serialMB, 19200, 1, 0, SIZE, datemod.au16data);
-    modbus_update_comms(19200, 1);
+    // modbus_update_comms(19200, 1);
 
 #ifdef verATP
     lls_ATP = new LS_RS485(&serialLS, 100);

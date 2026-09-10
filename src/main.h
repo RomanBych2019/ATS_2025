@@ -3,7 +3,7 @@
 
 // #define PRINTDEBUG
 // #define verATP
-// #define verAnalogInput
+#define verAnalogInput
 
 #include <Arduino.h>
 #include <Wire.h>
