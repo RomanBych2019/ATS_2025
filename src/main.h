@@ -19,7 +19,9 @@
 #include "Preferences.h"
 #include <SoftwareSerial.h>
 #include <RtcDS3231.h>
+#ifdef ENABLE_WEB_PORTAL
 #include <GyverPortal.h>
+#endif
 
 #ifdef verAnalogInput
 #include <Adafruit_ADS1X15.h>
@@ -113,11 +115,13 @@ extern bool autostop;
 extern bool flag_HMI_send;
 extern bool flag_conect_ok;                     // флаг удачного получения данных от ДУТ
 
+#ifdef ENABLE_WEB_PORTAL
 struct WebData {
   int w_vtank_pumpingout = 0;
 };
 
 extern WebData web_data;
+#endif
 
 extern const char *LOG_FILE_NAME;
 
@@ -161,7 +165,9 @@ extern RtcDS3231<TwoWire> Rtc;
 extern Preferences flash;
 extern EspSoftwareSerial::UART serialHMI;
 
+#ifdef ENABLE_WEB_PORTAL
 extern GyverPortal ui;
+#endif
 
 // ДУТ
 extern ILEVEL_SENSOR *lls;

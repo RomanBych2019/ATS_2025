@@ -8,13 +8,19 @@
 #include "LS_EMPTY.h"
 #include "HmiRenderer.h"
 #include "ModbusTable.h"
+#ifdef ENABLE_WEB_PORTAL
 #include "WebUi.h"
 #include "WifiManager.h"
+#endif
 // #include <TimeUtil.h>
 
 const char *ssid = "WiFi ATS";
 const char *password = "00000001";
+#ifdef ENABLE_WEB_PORTAL
 const char *VER = "2025_3.0 web 2.0";
+#else
+const char *VER = "2025_3.0";
+#endif
 
 LoginPass lp;
 String errorStringWeb {};
@@ -26,7 +32,9 @@ bool autostop = false;
 bool flag_HMI_send = false;
 bool flag_conect_ok = true;
 
+#ifdef ENABLE_WEB_PORTAL
 WebData web_data;
+#endif
 
 const char *LOG_FILE_NAME = "log.csv";
 
@@ -34,7 +42,9 @@ hw_timer_t *My_timer = NULL;
 RtcDS3231<TwoWire> Rtc(Wire);
 Preferences flash;
 EspSoftwareSerial::UART serialHMI;
+#ifdef ENABLE_WEB_PORTAL
 GyverPortal ui(&LittleFS);
+#endif
 
 ILEVEL_SENSOR *lls;
 LS_RS485 *lls_RS485;
@@ -156,19 +166,23 @@ void setup()
     // server.on("/delete", [](AsyncWebServerRequest *request)
     //           { request->send(200, "text/html", "<p>ATS - delete log file</p>" + deleteLog()); });
 
+#ifdef ENABLE_WEB_PORTAL
     wifiInit();
+#endif
 
     if (!LittleFS.begin())
         Serial.println("FS Error");
 
     log_e("Ver: %s", VER);
 
+#ifdef ENABLE_WEB_PORTAL
     ui.attachBuild(buildPage);
     ui.attach(actionDownload);
     ui.attach(actionPage);
     ui.start("ATS");
     ui.downloadAuto(0); // отключить авто скачивание
     ui.enableOTA();
+#endif
 
     xTaskCreatePinnedToCore(
         calculate_speedPump,        /* Вычисление скорости потока */
@@ -234,7 +248,9 @@ void loop()
     errors();
     updateModbusRegisters();
     hmi.listen();
+#ifdef ENABLE_WEB_PORTAL
     ui.tick();
+#endif
 
     switch (datemod.mode)
     {
