@@ -127,7 +127,7 @@ void setup()
     ads.setGain(GAIN_ONE);
     ads.begin();
     lls_analog_u = new LS_ANALOG_U(ads, 2);
-    lls_analog_f = new LS_ANALOG_F();
+    lls_analog_f = new LS_ANALOG_F(IN_ANALOG_F);
 #endif
 
     flash.begin("eerom", false);

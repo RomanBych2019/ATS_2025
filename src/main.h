@@ -72,6 +72,7 @@ extern LoginPass lp;
 
 #ifdef PLATE_v2
 static const uint8_t INDI_F_PIN_ = GPIO_NUM_25;     // (25) индикатор включения частотного ДУТа
+static const uint8_t IN_ANALOG_F = GPIO_NUM_34;     // вход частотного ДУТа
 static const uint8_t OUT_PUMP = GPIO_NUM_12;        // вывод управления насосом
 static const uint8_t INIDICATE_COUNT = GPIO_NUM_13; // вывод индикатора входных импульсов
 static const uint8_t IN_KCOUNT = GPIO_NUM_5;        // вход счетчика топлива

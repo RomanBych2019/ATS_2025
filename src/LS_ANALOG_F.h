@@ -3,8 +3,6 @@
 #include <Arduino.h>
 
 #include "LEVEL_SENSOR.h"
-#include "main.h"
-#define PLATE_v1
 
 void IRAM_ATTR rpm();
 void update_Frequence(void *pvParameters);
@@ -13,15 +11,8 @@ float getAnalogFrequency();
 class LS_ANALOG_F : public ILEVEL_SENSOR
 {
 private:
+    const uint inputPin_;
     uint32_t median_ = 0, newest_ = 0, recent_ = 0, oldest_ = 0, val_ = 0;
-
-#ifdef PLATE_TEST
-    const uint INPUTPIN_ = 35;
-#endif
-
-#ifdef PLATE_v1
-    static const uint INPUTPIN_ = 34;
-#endif
 
     TaskHandle_t update_Frequence_ = NULL;
 
@@ -48,11 +39,11 @@ private:
     }
 
 public:
-    LS_ANALOG_F() // конструктор для каналов F (35)
+    explicit LS_ANALOG_F(uint inputPin) : inputPin_(inputPin)
     {
         type_ = ILEVEL_SENSOR::ANALOGE_F;
-        pinMode(INPUTPIN_, INPUT);
-        attachInterrupt(INPUTPIN_, rpm, CHANGE);
+        pinMode(inputPin_, INPUT);
+        attachInterrupt(inputPin_, rpm, CHANGE);
         xTaskCreatePinnedToCore(
             update_Frequence,
             "update_Frequence",
@@ -95,6 +86,6 @@ public:
         // Serial.print("\n  - Kill analogeF");
         if (update_Frequence_ != NULL)
             vTaskDelete(update_Frequence_);
-        detachInterrupt(INPUTPIN_);
+        detachInterrupt(inputPin_);
     };
 };
