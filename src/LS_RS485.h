@@ -7,8 +7,7 @@
 class LS_RS485 : public ILEVEL_SENSOR
 {
 private:
-    uint8_t netadress_;
-    String ttydata_;
+    uint8_t netadress_ = 0xFF;
     HardwareSerial *port_ = nullptr;
     boolean doConnect_ = false;
 
@@ -16,8 +15,20 @@ private:
 
     bool update_()
     {
-        if (netadress_ == 0xFF)
+        if (port_ == nullptr)
+        {
+            doConnect_ = false;
+            set_error_();
             return false;
+        }
+
+        if (netadress_ == 0xFF)
+        {
+            doConnect_ = false;
+            set_error_();
+            return false;
+        }
+
         // Serial.printf("\nUpdate RS485 adr: %d\n", netadress_);
         doConnect_ = false;
         std::vector<uint8_t> bufferRead485{};
@@ -26,6 +37,9 @@ private:
         rs485TransmitArray[3] = crc8(rs485TransmitArray, 3);
         for (int i = 0; i < 3; i++)
         {
+            while (port_->available())
+                port_->read();
+
             port_->write(rs485TransmitArray, 4);
             delay(100);
             while (port_->available())
@@ -90,18 +104,21 @@ private:
     }
 
 public:
-    LS_RS485() {}
-    LS_RS485(HardwareSerial *port, uint16_t netadress = 0x01) : port_(port), netadress_(netadress)
+    LS_RS485(HardwareSerial *port, uint16_t netadress = 0x01) : port_(port)
     {
         // Serial.print("\n  - Create rs485 \n");
 
         type_ = ILEVEL_SENSOR::RS485;
         level_start_ = MAX_ANALOGE_RS485_START;
+        setNetadress(netadress);
     }
 
     void setNetadress(int netadress) override
     {
-        netadress_ = netadress;
+        if (netadress >= 0 && netadress <= 0xFE)
+            netadress_ = netadress;
+        else
+            netadress_ = 0xFF;
     }
     const int getNetadres() const override
     {
@@ -162,11 +179,18 @@ public:
         std::map<uint16_t, float> tabl{{0, 0.0}, {8, 4.0}, {124, 40.0}, {298, 80.0}, {457, 129.0}, {634, 160.0}, {808, 200.0}, {979, 240.0}, {1142, 280.0}, {1230, 320.0}, {4000, 1000.0}};
 
         auto it_end = tabl.upper_bound(level_);
+        if (it_end == tabl.begin() || it_end == tabl.end())
+            return -1.0;
+
         auto it_begin = it_end;
         it_begin--;
-        if (it_end == tabl.end())
+
+        const float inputRange = it_end->first - it_begin->first;
+        if (inputRange <= 0)
             return -1.0;
-        return map(it_begin->first, it_end->first, level_, it_begin->second, it_end->second);
+
+        const float outputRange = it_end->second - it_begin->second;
+        return it_begin->second + (level_ - it_begin->first) * outputRange / inputRange;
     }
 
 private:
