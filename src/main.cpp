@@ -521,8 +521,8 @@ void rpmFun()
 {
     if (micros() - time_counter_imp > MIN_DURATION)
     {
-        countV->setKcount();
-        if (countV->getK() % 20 == 0 && !isCountIndicatorTimerActive())
+        const unsigned long pulseCount = countV->setKcount();
+        if (pulseCount % 20 == 0 && !isCountIndicatorTimerActive())
         { 
             // digitalWrite(INIDICATE_COUNT, !digitalRead(INIDICATE_COUNT));
             digitalWrite(INIDICATE_COUNT, HIGH);
