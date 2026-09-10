@@ -9,7 +9,6 @@
 #include <esp_arduino_version.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <WiFi.h>
 // #include <AsyncTCP.h>
 // #include <ESPAsyncWebServer.h>
 // #include <AsyncElegantOTA.h>
@@ -22,7 +21,6 @@
 #include <SimpleModbusSlave_DUE.h>
 #include <RtcDS3231.h>
 #include <GyverPortal.h>
-#include <EEPROM.h>
 
 #ifdef verAnalogInput
 #include <Adafruit_ADS1X15.h>
@@ -172,19 +170,6 @@ String makeLlsDateToDisplay(ILEVEL_SENSOR *_lls);
 void onHMIEvent(String messege, String data, String response);
 void exitTarring();
 String saveLog();
-
-void wifiInit();
-void buildLoginPage();
-void buildLoginPage(String wifi);
-void loginPortal();
-
-// void build();
-void actionDownload();
-// void action();
-void action(GyverPortal &p);
-
-void buildPage();
-void actionPage();
 
 void delete_lls();
 String saveLog();
