@@ -50,20 +50,20 @@ public:
     }
     
 
-    std::vector<uint32_t> *getNRefill()
+    const std::vector<uint32_t> *getNRefill() const
     {
         return &n_ref_;
     }
 
-    uint32_t getNRefill(uint i)
+    uint32_t getNRefill(uint i) const
     {
-        if (n_ref_.size())
+        if (i < n_ref_.size())
             return n_ref_.at(i);
         else
             return 0;
     }
 
-    uint32_t getBackNRefill()
+    uint32_t getBackNRefill() const
     {
         if (n_ref_.size())
             return n_ref_.back();
@@ -71,12 +71,12 @@ public:
             return 0;
     }
 
-    std::vector<uint32_t> *getVRefill()
+    const std::vector<uint32_t> *getVRefill() const
     {
         return &v_ref_;
     }
 
-    uint32_t getBackRefill()
+    uint32_t getBackRefill() const
     {
         if (v_ref_.size())
             return v_ref_.back();
@@ -84,24 +84,24 @@ public:
             return 0;
     }
 
-    uint32_t getRefill(uint i)
+    uint32_t getRefill(uint i) const
     {
-        if (v_ref_.size())
+        if (i < v_ref_.size())
             return v_ref_.at(i);
         else
             return 0;
     }
 
-    void setId(String id)
+    void setId(const String &id)
     {
         id_ = id;
     }
-    const String getId()
+    const String getId() const
     {
         return id_;
     }
 
-    const int getId_int()
+    const int getId_int() const
     {
         String result{};
         for (auto s : id_)
@@ -115,10 +115,15 @@ public:
 //запись результатов пролива
     void saveResultRefuil(ILEVEL_SENSOR *lls)
     {
-        String str = String(getCountReffil()) + "," + String(lls->getLevel()) + "," + String(getVfuel() / 10.0, 1);
+        if (lls == nullptr || v_ref_.size() >= MAX_SIZE)
+            return;
+
+        const uint32_t level = lls->getLevel();
+        const uint32_t v_fuel = getVfuel();
+        String str = String(getCountReffil()) + "," + String(level) + "," + String(v_fuel / 10.0, 1);
         v_total_.push_back(str);
-        v_ref_.push_back(getVfuel());
-        n_ref_.push_back(lls->getLevel());
+        v_ref_.push_back(v_fuel);
+        n_ref_.push_back(level);
 
         // Serial.printf("Тип ДУТ: %d\n", lls->getType()); 
         // Serial.printf("Размер вектора до: %d\n", lls->getVecLevel()->size());   
@@ -140,23 +145,26 @@ public:
             n_ref_.pop_back();
 
         // Serial.printf("Удаление последнего результата\n");
-        lls->resetVecLevel();
+        if (lls != nullptr)
+            lls->resetVecLevel();
     }
 
 // выдача результатов пролива i
-    String getResultRefill(int i)
+    String getResultRefill(int i) const
     {
-        return v_total_.at(i);
+        if (i >= 0 && static_cast<size_t>(i) < v_total_.size())
+            return v_total_.at(i);
+        return {};
     }
 
     //  выдача объема топлива в баке
-    const uint32_t getVfuel()
+    const uint32_t getVfuel() const
     {
         return countV_->getVFuel();
     }
 
     // выдача объема бака
-    const uint32_t getVTank()
+    const uint32_t getVTank() const
     {
         return tank_->getVTank();
     }
@@ -172,13 +180,13 @@ public:
     }
 
     // выдача объема одного пролива
-    const uint32_t getVTankRefill()
+    const uint32_t getVTankRefill() const
     {
         return vtank_refill_;
     }
 
     // выдача времени паузы между проливами
-    const uint getTimePause()
+    const uint getTimePause() const
     {
         return time_pause_;
     }
@@ -190,16 +198,24 @@ public:
     }
 
     // получить общее время тарировки
-    const uint32_t getTimeTarring()
+    const uint32_t getTimeTarring() const
     {
-        if (getVTank() > getVfuel() && num_reffil_ >= getCountReffil())
+        const uint32_t v_tank = getVTank();
+        const uint32_t v_fuel = getVfuel();
+        const uint refill_count = getCountReffil();
+
+        if (v_tank > v_fuel && num_reffil_ >= refill_count)
+        {
+            const uint remaining_refills = num_reffil_ - refill_count;
+            const uint32_t remaining_fuel = v_tank - v_fuel;
             // if (mode_ == tarring::MANUAL)
             if (time_pause_ != 0)
-                return time_pause_ * (num_reffil_ - getCountReffil()) + (getVTank() - getVfuel()) / PUMPSPEED;
+                return time_pause_ * remaining_refills + remaining_fuel / PUMPSPEED;
             else
-                return 2 * (num_reffil_ - getCountReffil()) + (getVTank() - getVfuel()) / PUMPSPEED;
-        else
-            return 0;
+                return 2 * remaining_refills + remaining_fuel / PUMPSPEED;
+        }
+
+        return 0;
     }
 
     // сброс настроек тарировки
@@ -228,13 +244,13 @@ public:
     }
 
     // выдача кол-ва проливов
-    const uint getNumRefill()
+    const uint getNumRefill() const
     {
         return num_reffil_;
     }
 
     // выдача номера пролива
-    uint getCountReffil()
+    uint getCountReffil() const
     {
         return v_ref_.size();
     }
@@ -245,7 +261,7 @@ public:
         t_start_ = t;
     }
 
-    const RtcDateTime getTStart()
+    const RtcDateTime getTStart() const
     {
         return t_start_;
     }

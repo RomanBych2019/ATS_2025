@@ -135,7 +135,7 @@ void sendNextion(void *pvParameters)
             case TAR:
                 lls->getType() == ILEVEL_SENSOR::NO_LLS ? str = "ДУТ не подключен" : str = makeLlsDateToDisplay(lls);
 
-                level = map(tar->getVfuel(), 0, tar->getVTank(), 0, 100);
+                level = tar->getVTank() > 0 ? map(tar->getVfuel(), 0, tar->getVTank(), 0, 100) : 0;
                 hmi("tar.b4.picc", pump->get() == OFF ? 23 : 24);
                 uint tmp_time_pause;
                 // if (autostop && tar->getType() == tarring::MANUAL)

@@ -184,7 +184,7 @@ public:
     }
 
     //  данные на экране Окончания тарировки при автоматической тарировке (с выводом графика тарировки)
-    void sendScreenEnd_Tar(String const &t0, uint16_t j0, std::vector<uint32_t> *n, std::vector<uint32_t> *v)
+    void sendScreenEnd_Tar(String const &t0, uint16_t j0, const std::vector<uint32_t> *n, const std::vector<uint32_t> *v)
     {
         if (!flag)
         {
