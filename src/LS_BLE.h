@@ -3,9 +3,10 @@
 #include "NimBLEDevice.h"
 #include "LEVEL_SENSOR.h"
 
-static String nameBLE_ls = "TD_00000001";
-static bool doConnect_ = false;
-static NimBLEAdvertisedDevice *llsDevice_;
+extern String nameBLE_ls;
+extern bool bleSensorFound;
+extern int16_t bleSensorRSSI;
+extern std::string bleManufacturerData;
 
 const uint16_t SCANTIME = 9; // 9 seconds
 extern uint16_t scanTime_; // время непрерывного сканирования
@@ -18,9 +19,10 @@ class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
         // Serial.printf("Advertised Device found: %s\n", advertisedDevice->toString().c_str());
         if (advertisedDevice->getName() == nameBLE_ls.c_str())
         {
-            doConnect_ = true;
-            llsDevice_ = advertisedDevice;
-            Serial.printf("Found our LLS: %s\n", llsDevice_->toString().c_str());
+            bleSensorFound = true;
+            bleSensorRSSI = advertisedDevice->getRSSI();
+            bleManufacturerData = advertisedDevice->getManufacturerData();
+            Serial.printf("Found our LLS: %s\n", advertisedDevice->toString().c_str());
             NimBLEDevice::getScan()->stop();
         }
     };
@@ -34,28 +36,34 @@ private:
     int16_t RSSI_ = {};
     BLEScan *BLEScan_;
     boolean _doConnect = false;
-    String ManufacturerData = {};
     bool _echo = false;
 
-    void buildData(uint8_t *source, uint8_t length)
+    bool buildData(const uint8_t *source, size_t length)
     {
-        if (length > 100)
-            length = 100;
-        if (length == 0)
+        if (source == nullptr || length < 14)
         {
-            return;
+            clearData();
+            return false;
         }
+
         dataBLE_[0] = source[3];
         dataBLE_[0] |= source[4] << 8;
         dataBLE_[1] = source[5];
         dataBLE_[2] = source[6];
         dataBLE_[3] = source[13] ? 4095 : 1024;
+        return true;
+    }
+
+    void clearData()
+    {
+        for (auto &data : dataBLE_)
+            data = 0;
     }
 
     // ошибки
     void set_error_()
     {
-        if (!doConnect_)
+        if (!bleSensorFound)
         {
             counter_errror_++;
             if (counter_errror_ > COUNT_ERROR) // ДУТ не найден
@@ -111,8 +119,15 @@ public:
                 delay(10);
         }
         nameBLE_ls = name;
+        bleSensorFound = false;
+        bleSensorRSSI = 0;
+        bleManufacturerData.clear();
         RSSI_ = 0;
         level_ = 0;
+        _doConnect = false;
+        clearData();
+        resetVecLevel();
+        clearError();
     }
 
     const String getNameBLE() const override
@@ -138,6 +153,8 @@ public:
 
     const uint16_t getDataBLE(uint i) const override
     {
+        if (i >= 4)
+            return 0;
         return dataBLE_[i];
     }
 
@@ -158,8 +175,13 @@ public:
         else
             update();
 
-        if (!doConnect_)
+        if (!bleSensorFound)
+        {
             error_ = error::NOT_FOUND;
+            scanTime_ = SCANTIME;
+            return false;
+        }
+
         scanTime_ = SCANTIME;
         return true;
     }
@@ -172,7 +194,9 @@ public:
         if (BLEScan_->isScanning())
             return true;
 
-        doConnect_ = false;
+        bleSensorFound = false;
+        bleSensorRSSI = 0;
+        bleManufacturerData.clear();
         if (_echo)
         {
             Serial.print(millis() / 1000);
@@ -180,17 +204,23 @@ public:
             Serial.print("Start scan BLE " + nameBLE_ls + "\n");
         }
 
-        BLEScanResults foundDevices = BLEScan_->start(scanTime_, false);
+        BLEScan_->start(scanTime_, false);
 
-        if (doConnect_)
+        if (bleSensorFound)
         {
-            clearError();
-            RSSI_ = llsDevice_->getRSSI();
-            std::string DataBLE = llsDevice_->getManufacturerData();
-            buildData((uint8_t *)DataBLE.data(), DataBLE.length());
-            level_ = getDataBLE(0);
-            setVLevel();
-            _doConnect = true;
+            RSSI_ = bleSensorRSSI;
+            if (buildData(reinterpret_cast<const uint8_t *>(bleManufacturerData.data()), bleManufacturerData.length()))
+            {
+                clearError();
+                level_ = getDataBLE(0);
+                setVLevel();
+                _doConnect = true;
+            }
+            else
+            {
+                level_ = 0;
+                _doConnect = false;
+            }
         }
         else
         {
@@ -198,13 +228,14 @@ public:
         }
         set_error_();
         BLEScan_->clearResults(); // delete results fromBLEScan buffer to release memory
+        bleManufacturerData.clear();
         if (_echo)
         {
             Serial.print(millis() / 1000);
             Serial.print(" | ");
             Serial.print("End scan BLE\n\n");
         }
-        return doConnect_?  true:  false;
+        return _doConnect;
     }
 
     void echoEnabled(bool echoEnabled)
