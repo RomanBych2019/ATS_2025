@@ -152,6 +152,11 @@ public:
         return false;
     }
 
+    bool getDoConnect() const override
+    {
+        return doConnect_;
+    }
+
     float getTarLevel()
     {
         std::map<uint16_t, float> tabl{{0, 0.0}, {8, 4.0}, {124, 40.0}, {298, 80.0}, {457, 129.0}, {634, 160.0}, {808, 200.0}, {979, 240.0}, {1142, 280.0}, {1230, 320.0}, {4000, 1000.0}};

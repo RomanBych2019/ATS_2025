@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <vector>
 
 class ILEVEL_SENSOR
 {
@@ -10,7 +11,7 @@ protected:
     std::vector<uint16_t> v_level_; // вектор последних значений уровня
     uint8_t v_count_ = 0;
     static const uint8_t COUNT_ERROR = 5; // максимальное количество ошибок
-    uint16_t level_start_;
+    uint16_t level_start_ = 0;
 
     ILEVEL_SENSOR()
     {
@@ -115,7 +116,7 @@ public:
         return {};
     }
 
-    virtual std::vector<uint16_t> *getVecLevel()
+    virtual const std::vector<uint16_t> *getVecLevel() const
     {
         return &v_level_;
     }
@@ -123,11 +124,7 @@ public:
     void resetVecLevel()
     {
         v_level_.clear();
-    }
-
-    void test()
-    {
-        level_++;
+        v_count_ = 0;
     }
 
     void setVLevel()
@@ -169,7 +166,7 @@ public:
         counter_errror_ = 0;
     }
 
-    bool getDoConnect()
+    virtual bool getDoConnect() const
     {
         return true;
     }

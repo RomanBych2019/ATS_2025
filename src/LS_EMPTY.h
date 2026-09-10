@@ -40,6 +40,11 @@ public:
         return false;
     }
 
+    bool getDoConnect() const override
+    {
+        return false;
+    }
+
     ~LS_EMPTY()
     {
         // Serial.print("\n  - Kill empty\n");

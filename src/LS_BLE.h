@@ -212,7 +212,7 @@ public:
         _echo = echoEnabled;
     }
     
-    bool getDoConnect()
+    bool getDoConnect() const override
     {
         return _doConnect;
     }
