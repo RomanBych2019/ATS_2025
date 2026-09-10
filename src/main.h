@@ -43,9 +43,9 @@
 #define serialLS Serial1
 #define serialMB Serial2
 
-const char *ssid = "WiFi ATS";
-const char *password = "00000001";
-const char *VER = "2025_3.0 web 2.0";
+extern const char *ssid;
+extern const char *password;
+extern const char *VER;
 
 struct LoginPass
 {
@@ -53,7 +53,7 @@ struct LoginPass
   char pass[20];
 };
 
-LoginPass lp;
+extern LoginPass lp;
 
 #define PLATE_v2 // PLATE_v1 - плата вер1,  PLATE_v2 - плата вер2 (2023)
 
@@ -100,7 +100,7 @@ enum type
 };
 
 const uint8_t SIZE = 22;
-union
+union DateMod
 {
   struct
   {
@@ -128,27 +128,30 @@ union
     bool controlFlowrate;                       //  22  Флаг контроля скорости потока
   };
   unsigned int au16data[SIZE];
-} datemod;
+};
 
-String errorStringWeb {};                       //  строка ошибки
-int counter_display_resetring = 0;
-volatile unsigned time_counter_imp = 0;
+extern DateMod datemod;
+extern String errorStringWeb;                       //  строка ошибки
+extern int counter_display_resetring;
+extern volatile unsigned time_counter_imp;
 const long MIN_DURATION = 500;
 const uint16_t TIME_UPDATE_LLS = 10000;         // период обновления данных ДУТ
 const uint16_t TIME_UPDATE_HMI = 300;           // период обновления данных на дисплее, мсек
 const uint16_t TIME_UPDATE_SPEED_PUMP = 2000;   // период обновления скорости потока
 const uint16_t TIME_PAUSE_END_TAR = 20000;      // пауза в конце тарировки для передаче данных в систему мониторинга
 
-unsigned long start_pause, worktime, time_start_refill, time_LLS_update, time_stop_flow_rate;
-bool autostop = false;
-bool flag_HMI_send = false;
-bool flag_conect_ok = true;                     // флаг удачного получения данных от ДУТ
+extern unsigned long start_pause, worktime, time_start_refill, time_LLS_update, time_stop_flow_rate;
+extern bool autostop;
+extern bool flag_HMI_send;
+extern bool flag_conect_ok;                     // флаг удачного получения данных от ДУТ
 
-struct web{
+struct WebData {
   int w_vtank_pumpingout = 0;
-}web_data;
+};
 
-const char *LOG_FILE_NAME = "log.csv";
+extern WebData web_data;
+
+extern const char *LOG_FILE_NAME;
 
 void rpmFun();
 void modeMenu();
@@ -197,46 +200,46 @@ void onHMIEvent(String messege, String data, String response);
 void printDebugLog(void *pvParameters);
 #endif
 
-hw_timer_t *My_timer = NULL;
+extern hw_timer_t *My_timer;
 void IRAM_ATTR onTimer();
 
-RtcDS3231<TwoWire> Rtc(Wire);
+extern RtcDS3231<TwoWire> Rtc;
 
-Preferences flash;
-EspSoftwareSerial::UART serialHMI;
+extern Preferences flash;
+extern EspSoftwareSerial::UART serialHMI;
 
-GyverPortal ui(&LittleFS);
+extern GyverPortal ui;
 
 // ДУТ
-ILEVEL_SENSOR *lls;
-LS_RS485 *lls_RS485;
-LS_BLE *lls_Ble;
-LS_EMPTY *lls_Empty;
+extern ILEVEL_SENSOR *lls;
+extern LS_RS485 *lls_RS485;
+extern LS_BLE *lls_Ble;
+extern LS_EMPTY *lls_Empty;
 #ifdef verAnalogInput
-Adafruit_ADS1115 ads; /* Use this for the 16-bit version */
-LS_ANALOG_F *lls_analog_f;
-LS_ANALOG_U *lls_analog_u;
+extern Adafruit_ADS1115 ads; /* Use this for the 16-bit version */
+extern LS_ANALOG_F *lls_analog_f;
+extern LS_ANALOG_U *lls_analog_u;
 #endif
 
 #ifdef verATP
 // ДУТ в емкости АТП
-LS_RS485 *lls_ATP;
+extern LS_RS485 *lls_ATP;
 #endif
 
 // насос
-Out *pump;
+extern Out *pump;
 
 // запасной выход
-Out *out_tmp;
+extern Out *out_tmp;
 
 // счетчик
-COUNTER *countV;
+extern COUNTER *countV;
 
 // бак
-TANK *tank;
+extern TANK *tank;
 
 // тарировка
-TARRING *tar;
+extern TARRING *tar;
 
 // дисплей
-NEXTION hmi(serialHMI);
+extern NEXTION hmi;

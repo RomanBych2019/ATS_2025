@@ -8,6 +8,53 @@
 #include "LS_EMPTY.h"
 // #include <TimeUtil.h>
 
+const char *ssid = "WiFi ATS";
+const char *password = "00000001";
+const char *VER = "2025_3.0 web 2.0";
+
+LoginPass lp;
+DateMod datemod;
+
+String errorStringWeb {};
+int counter_display_resetring = 0;
+volatile unsigned time_counter_imp = 0;
+
+unsigned long start_pause, worktime, time_start_refill, time_LLS_update, time_stop_flow_rate;
+bool autostop = false;
+bool flag_HMI_send = false;
+bool flag_conect_ok = true;
+
+WebData web_data;
+
+const char *LOG_FILE_NAME = "log.csv";
+
+hw_timer_t *My_timer = NULL;
+RtcDS3231<TwoWire> Rtc(Wire);
+Preferences flash;
+EspSoftwareSerial::UART serialHMI;
+GyverPortal ui(&LittleFS);
+
+ILEVEL_SENSOR *lls;
+LS_RS485 *lls_RS485;
+LS_BLE *lls_Ble;
+LS_EMPTY *lls_Empty;
+#ifdef verAnalogInput
+Adafruit_ADS1115 ads;
+LS_ANALOG_F *lls_analog_f;
+LS_ANALOG_U *lls_analog_u;
+#endif
+
+#ifdef verATP
+LS_RS485 *lls_ATP;
+#endif
+
+Out *pump;
+Out *out_tmp;
+COUNTER *countV;
+TANK *tank;
+TARRING *tar;
+NEXTION hmi(serialHMI);
+
 static volatile bool countIndicatorTimerActive = false;
 
 static void setupCountIndicatorTimer()
