@@ -2,6 +2,51 @@
 
 #include "main.h"
 
+namespace
+{
+const unsigned int ERROR_LLS_LEVEL_NOT_CHANGED = 32;
+const unsigned int ERROR_LOW_FLOW_RATE = 64;
+const unsigned int ERROR_HIGH_INITIAL_LLS_LEVEL = 128;
+
+struct ErrorMessage
+{
+    unsigned int mask;
+    const char *nextionText;
+    const char *webText;
+};
+
+const ErrorMessage ERROR_MESSAGES[] = {
+    {ILEVEL_SENSOR::error::CLIFF, "Данные с ДУТ ниже минимального значения\\rПроверте настройки ДУТ (min уровень))", "Данные с ДУТ ниже минимального значения<br>Проверте настройки ДУТ (min уровень))"},
+    {ILEVEL_SENSOR::error::CLOSURE, "Данные с ДУТ выше максимального значения\\rПроверте настройки и подключение ДУТ", "Данные с ДУТ выше максимального значения<br>Проверте настройки и подключение ДУТ"},
+    {ILEVEL_SENSOR::error::NOT_FOUND, "ДУТ не найден\\rПроверте настройки и подключение ДУТ", "ДУТ не найден<br>Проверте настройки и подключение ДУТ"},
+    {ILEVEL_SENSOR::error::LOST, "ДУТ потерян\\rПроверте подключение ДУТ", "ДУТ потерян<br>Проверте подключение ДУТ"},
+    {ERROR_LLS_LEVEL_NOT_CHANGED, "Нет изменения значений ДУТ\\rПроверте поступление топлива в бак", "Нет изменения значений ДУТ<br>Проверте поступление топлива в бак"},
+    {ERROR_LOW_FLOW_RATE, "Низкая скорость потока топлива\\rПроверте прохождение топлива через счетчик", "Низкая скорость потока топлива<br>Проверте прохождение топлива через счетчик"},
+    {ERROR_HIGH_INITIAL_LLS_LEVEL, "Высокие начальные показания ДУТ\\rПроверте калибровку ДУТ, убедитесь в отсутствии топлива в баке", "Высокие начальные показания ДУТ<br>Проверте калибровку ДУТ, убедитесь в отсутствии топлива в баке"},
+};
+
+bool buildErrorMessage(String &nextionText, String &webText)
+{
+    if (datemod.error == 0)
+    {
+        webText = "";
+        return false;
+    }
+
+    for (const auto &message : ERROR_MESSAGES)
+    {
+        if (datemod.error & message.mask)
+        {
+            nextionText = message.nextionText;
+            webText = message.webText;
+            return true;
+        }
+    }
+
+    return false;
+}
+}
+
 /*  ---------- Отправка данных на дисплей Nextion  ---------- */
 void sendNextion(void *pvParameters)
 {
@@ -110,46 +155,7 @@ void sendNextion(void *pvParameters)
                 break;
 
             case MESSAGE:
-                if (datemod.error & ILEVEL_SENSOR::error::CLIFF)
-                {
-                    str = "Данные с ДУТ ниже минимального значения\\rПроверте настройки ДУТ (min уровень))";
-                    errorStringWeb = "Данные с ДУТ ниже минимального значения<br>Проверте настройки ДУТ (min уровень))";
-                }
-                else if (datemod.error & ILEVEL_SENSOR::error::CLOSURE)
-                {
-                    str = "Данные с ДУТ выше максимального значения\\rПроверте настройки и подключение ДУТ";
-                    errorStringWeb = "Данные с ДУТ выше максимального значения<br>Проверте настройки и подключение ДУТ";
-                }
-                else if (datemod.error & ILEVEL_SENSOR::error::NOT_FOUND)
-                {
-                    str = "ДУТ не найден\\rПроверте настройки и подключение ДУТ";
-                    errorStringWeb = "ДУТ не найден<br>Проверте настройки и подключение ДУТ";
-                }
-                else if (datemod.error & ILEVEL_SENSOR::error::LOST)
-                {
-                    str = "ДУТ потерян\\rПроверте подключение ДУТ";
-                    errorStringWeb = "ДУТ потерян<br>Проверте подключение ДУТ";
-                }
-                else if (datemod.error & 32)
-                {
-                    str = "Нет изменения значений ДУТ\\rПроверте поступление топлива в бак";
-                    errorStringWeb = "Нет изменения значений ДУТ<br>Проверте поступление топлива в бак";
-                }
-                else if (datemod.error & 64)
-                {
-                    str = "Низкая скорость потока топлива\\rПроверте прохождение топлива через счетчик";
-                    errorStringWeb = "Низкая скорость потока топлива<br>Проверте прохождение топлива через счетчик";
-                }
-                else if (datemod.error & 128)
-                {
-                    str = "Высокие начальные показания ДУТ\\rПроверте калибровку ДУТ, убедитесь в отсутствии топлива в баке";
-                    errorStringWeb = "Высокие начальные показания ДУТ<br>Проверте калибровку ДУТ, убедитесь в отсутствии топлива в баке";
-                }
-
-                if (datemod.error == 0)
-                    errorStringWeb = "";
-
-                if (str)
+                if (buildErrorMessage(str, errorStringWeb))
                     hmi.sendScreenMessage(str);
                 break;
 
