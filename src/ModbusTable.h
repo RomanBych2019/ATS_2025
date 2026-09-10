@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-const uint8_t SIZE = 22;
+const uint8_t MODBUS_REGISTER_COUNT = 22;
 union DateMod
 {
   struct
@@ -30,7 +30,7 @@ union DateMod
     unsigned int llsATP;                        //  21  N ДУТа емкости АПТ (lls adr=100)
     bool controlFlowrate;                       //  22  Флаг контроля скорости потока
   };
-  unsigned int au16data[SIZE];
+  unsigned int au16data[MODBUS_REGISTER_COUNT];
 };
 
 extern DateMod datemod;
