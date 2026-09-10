@@ -40,6 +40,8 @@
 
 #define LittleFS SPIFFS
 
+class LS_ANALOG_F;
+
 #define serialLS Serial1
 #define serialMB Serial2
 
@@ -192,7 +194,6 @@ String listDir(fs::FS &fs, const char *dirname, uint8_t levels);
 
 void updateLS(void *pvParameters);
 void updateLS();
-void sendNextion(void *pvParameters);
 void readNextion(void *pvParameters);
 void calculate_speedPump(void *pvParameters);
 void onHMIEvent(String messege, String data, String response);

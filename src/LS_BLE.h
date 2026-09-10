@@ -8,7 +8,7 @@ static bool doConnect_ = false;
 static NimBLEAdvertisedDevice *llsDevice_;
 
 const uint16_t SCANTIME = 9; // 9 seconds
-uint16_t scanTime_ = SCANTIME; // время непрерывного сканирования
+extern uint16_t scanTime_; // время непрерывного сканирования
 
 
 class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
