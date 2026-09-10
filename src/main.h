@@ -6,6 +6,7 @@
 #define verAnalogInput
 
 #include <Arduino.h>
+#include <esp_arduino_version.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <WiFi.h>

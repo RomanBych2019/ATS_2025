@@ -8,6 +8,40 @@
 #include "LS_EMPTY.h"
 // #include <TimeUtil.h>
 
+static volatile bool countIndicatorTimerActive = false;
+
+static void setupCountIndicatorTimer()
+{
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+    My_timer = timerBegin(1000000);
+    timerAttachInterrupt(My_timer, &onTimer);
+#else
+    My_timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(My_timer, &onTimer, true);
+    timerAlarmWrite(My_timer, 1000000, false);
+#endif
+}
+
+static bool isCountIndicatorTimerActive()
+{
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+    return countIndicatorTimerActive;
+#else
+    return timerAlarmEnabled(My_timer);
+#endif
+}
+
+static void startCountIndicatorTimer()
+{
+    countIndicatorTimerActive = true;
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+    timerWrite(My_timer, 0);
+    timerAlarm(My_timer, 1000000, false, 0);
+#else
+    timerAlarmEnable(My_timer);
+#endif
+}
+
 void setup()
 {
     pinMode(GPIO_NUM_2, OUTPUT);
@@ -144,9 +178,7 @@ void setup()
     digitalWrite(GPIO_NUM_2, LOW);
 
     // таймер для светодиода индикации счетчика
-    My_timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(My_timer, &onTimer, true);
-    timerAlarmWrite(My_timer, 1000000, false);
+    setupCountIndicatorTimer();
 }
 
 void loop()
@@ -635,11 +667,11 @@ void rpmFun()
     if (micros() - time_counter_imp > MIN_DURATION)
     {
         countV->setKcount();
-        if (countV->getK() % 20 == 0 && !timerAlarmEnabled(My_timer))
+        if (countV->getK() % 20 == 0 && !isCountIndicatorTimerActive())
         { 
             // digitalWrite(INIDICATE_COUNT, !digitalRead(INIDICATE_COUNT));
             digitalWrite(INIDICATE_COUNT, HIGH);
-            timerAlarmEnable(My_timer);
+            startCountIndicatorTimer();
         }
     }
     time_counter_imp = micros();
@@ -1628,5 +1660,6 @@ void delete_lls()
 
 void IRAM_ATTR onTimer()
 {
+    countIndicatorTimerActive = false;
     digitalWrite(INIDICATE_COUNT, OFF);
 }
