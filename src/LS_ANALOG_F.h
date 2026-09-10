@@ -6,13 +6,9 @@
 #include "main.h"
 #define PLATE_v1
 
-extern float f_;
-extern unsigned long t_start_;
-extern volatile uint32_t count_;
-extern uint32_t count_old_;
-
 void IRAM_ATTR rpm();
 void update_Frequence(void *pvParameters);
+float getAnalogFrequency();
 
 class LS_ANALOG_F : public ILEVEL_SENSOR
 {
@@ -42,7 +38,7 @@ private:
         {
             counter_errror_++;
             if (counter_errror_ > COUNT_ERROR)
-                error_ = error::CLOSURE; // показания датчика выше нормы (знеисправность датчика)
+                error_ = error::CLOSURE; // показания датчика выше нормы (неисправность датчика)
         }
         else
         {
@@ -71,7 +67,7 @@ public:
     // обновление показаний
     bool update() override
     {
-        val_ = f_;
+        val_ = getAnalogFrequency();
         oldest_ = recent_;
         recent_ = newest_;
         newest_ = val_;
